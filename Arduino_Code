@@ -1,0 +1,28 @@
+#include <Servo.h>
+
+// Define each servo
+Servo swipe_servo;  // 180-degree microservo to push coins onto drop pad
+Servo drop_servo;  // 180-degree microservo to drop coins into the hatches
+Servo rotate_servo;  // 360-degree continuous microservo that rotates the subsystem to the next hatch
+
+void setup() {
+  // Attach servos to their respective pins
+  swipe_servo.attach(9);  // Attach swipe_servo to pin 9
+  drop_servo.attach(10); // Attach drop_servo to pin 10
+  rotate_servo.attach(11); // Attach rotate_servo to pin 11
+}
+
+void loop() {
+  // Dispense coin
+  servo1.write(90);
+  delay(2000);  // Wait 2 seconds
+
+  // Drop Coin
+  servo2.write(90);
+  delay(2000);  // Wait 2 seconds
+
+  //Rotate Subsystem
+  servo3.write(90);  // 90 sends a stop signal, adjust to control speed/direction
+  delay(1000);       // Adjust time for approximate 90-degree tur
+  servo3.write(90);  // Stop the continuous servo
+}
