@@ -1,27 +1,66 @@
-#include <Servo.h>
-
-Servo swipe_servo;
-Servo drop_servo;
-Servo rotate_servo;
+#include <SPI.h>
+#include <W25Q16.h>
+#define SPI_SCK 15
+#define SPI_MISO 5
+#define SPI_MOSI 16
+#define SPI_SS 4
+SPIClass spi = SPIClass(VSPI);
+W25Q16 flash;
+unsigned int startPage = 0;
+unsigned int startPageAddress = 0;
+unsigned int endPage = 0;
+unsigned int endPageAddress = 0;
 
 void setup() {
-  swipe_servo.attach(9);
-  drop_servo.attach(10);
-  rotate_servo.attach(11);
+  Serial.begin(9600);
+  spi.begin(SPI_SCK, SPI_MISO, SPI_MOSI, SPI_SS);
+  flash.init(10);
+  flash.chipErase();
+  byte manID = flash.manufacturerID();
+  Serial.print("Manufacturer ID: ");
+  Serial.println(manID,HEX);
+  flash.powerDown();
 }
 
 void loop() {
-  swipe_servo.write(0);      // Move swipe servo to 0 degrees
-  delay(1000);
-  swipe_servo.write(90);    // Move swipe servo to 180 degrees
-  delay(1000);
+  flash.releasePowerDown();
+  int i = 0;
+  while(i<3) {
+    flash.write(endPage,(byte)endPageAddress,(byte)random(0,255));
+    endPageAddress++;
+    endOfPage();
+    i++;
+  }
+  endPageAddress = startPageAddress;
+  endPage = startPage;
+  i = 0;
+  while(i<3) {
+    consoleOutput(endPage,endPageAddress,flash.read(endPage,(byte)endPageAddress));
+    endPageAddress++;
+    endOfPage();
+    i++;
+  }
+  flash.powerDown();
+  startPage = endPage;
+  startPageAddress = endPageAddress;
+  delay(500);
+}
 
-  drop_servo.write(0);       // Move drop servo to 0 degrees
-  delay(1000);
-  drop_servo.write(90);     // Move drop servo to 180 degrees
-  delay(1000);
+void endOfPage() {
+  if (endPageAddress>255) {
+    endPage++;
+    if (endPage>8191) {
+      endPage = 0;
+    } 
+    endPageAddress = 0;
+  }
+}
 
-  rotate_servo.write(0);     // Rotate continuous servo in one direction
-  delay(1000);
-  rotate_servo.write(90);    // Stop the continuous servo
+void consoleOutput(unsigned int page, unsigned int address, byte val) {
+   Serial.print("Page ");
+   Serial.print(page);
+   Serial.print(" Address ");
+   Serial.print(address);
+   Serial.print(": ");
+   Serial.println(val);
 }
